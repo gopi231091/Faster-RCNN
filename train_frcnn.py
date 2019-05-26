@@ -158,7 +158,7 @@ if not os.path.isfile(C.model_path): ##
         	model_classifier.load_weights(C.base_net_weights, by_name=True)
     	except:
         	print('Could not load pretrained model weights. Weights can be found in the keras application folder \
-            	https://github.com/fchollet/keras/tree/master/keras/applications')
+            		https://github.com/fchollet/keras/tree/master/keras/applications')
     
     	# Create the record.csv file to record losses, acc and mAP
     	record_df = pd.DataFrame(columns=['mean_overlapping_bboxes', 'class_acc', 'loss_rpn_cls', 'loss_rpn_regr', 'loss_class_cls', 'loss_class_regr', 'curr_loss', 'elapsed_time', 'mAP'])
