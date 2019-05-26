@@ -150,40 +150,40 @@ except:
 # Because the google colab can only run the session several hours one time (then you need to connect again), 
 # we need to save the model and load the model to continue training
 if not os.path.isfile(C.model_path): ##
-    #If this is the begin of the training, load the pre-traind base network such as vgg-16
-    try:
-        print('This is the first time of your training')
-        print('loading weights from {}'.format(C.base_net_weights))
-        model_rpn.load_weights(C.base_net_weights, by_name=True)
-        model_classifier.load_weights(C.base_net_weights, by_name=True)
-    except:
-        print('Could not load pretrained model weights. Weights can be found in the keras application folder \
-            https://github.com/fchollet/keras/tree/master/keras/applications')
+    	#If this is the begin of the training, load the pre-traind base network such as vgg-16
+	try:
+        	print('This is the first time of your training')
+        	print('loading weights from {}'.format(C.base_net_weights))
+        	model_rpn.load_weights(C.base_net_weights, by_name=True)
+        	model_classifier.load_weights(C.base_net_weights, by_name=True)
+    	except:
+        	print('Could not load pretrained model weights. Weights can be found in the keras application folder \
+            	https://github.com/fchollet/keras/tree/master/keras/applications')
     
-    # Create the record.csv file to record losses, acc and mAP
-    record_df = pd.DataFrame(columns=['mean_overlapping_bboxes', 'class_acc', 'loss_rpn_cls', 'loss_rpn_regr', 'loss_class_cls', 'loss_class_regr', 'curr_loss', 'elapsed_time', 'mAP'])
+    	# Create the record.csv file to record losses, acc and mAP
+    	record_df = pd.DataFrame(columns=['mean_overlapping_bboxes', 'class_acc', 'loss_rpn_cls', 'loss_rpn_regr', 'loss_class_cls', 'loss_class_regr', 'curr_loss', 'elapsed_time', 'mAP'])
 else:
-    # If this is a continued training, load the trained model from before
-    print('Continue training based on previous trained model')
-    print('Loading weights from {}'.format(C.model_path))
-    model_rpn.load_weights(C.model_path, by_name=True)
-    model_classifier.load_weights(C.model_path, by_name=True)
+    	# If this is a continued training, load the trained model from before
+    	print('Continue training based on previous trained model')
+    	print('Loading weights from {}'.format(C.model_path))
+    	model_rpn.load_weights(C.model_path, by_name=True)
+    	model_classifier.load_weights(C.model_path, by_name=True)
     
-    # Load the records
-    record_df = pd.read_csv(C.record_path)
+	# Load the records
+	record_df = pd.read_csv(C.record_path)
 
-    r_mean_overlapping_bboxes = record_df['mean_overlapping_bboxes']
-    r_class_acc = record_df['class_acc']
-    r_loss_rpn_cls = record_df['loss_rpn_cls']
-    r_loss_rpn_regr = record_df['loss_rpn_regr']
-    r_loss_class_cls = record_df['loss_class_cls']
-    r_loss_class_regr = record_df['loss_class_regr']
-    r_curr_loss = record_df['curr_loss']
-    r_elapsed_time = record_df['elapsed_time']
-    r_mAP = record_df['mAP']
+	r_mean_overlapping_bboxes = record_df['mean_overlapping_bboxes']
+	r_class_acc = record_df['class_acc']
+	r_loss_rpn_cls = record_df['loss_rpn_cls']
+	r_loss_rpn_regr = record_df['loss_rpn_regr']
+	r_loss_class_cls = record_df['loss_class_cls']
+	r_loss_class_regr = record_df['loss_class_regr']
+	r_curr_loss = record_df['curr_loss']
+	r_elapsed_time = record_df['elapsed_time']
+	r_mAP = record_df['mAP']
 
-    print('Already train %dK batches'% (len(record_df)))
-
+	print('Already train %dK batches'% (len(record_df)))
+	
 
 optimizer = Adam(lr=1e-5)
 optimizer_classifier = Adam(lr=1e-5)
@@ -207,9 +207,9 @@ start_time = time.time()
 
 ## best_loss = np.Inf
 if len(record_df)==0:
-    best_loss = np.Inf
+	best_loss = np.Inf
 else:
-    best_loss = np.min(r_curr_loss)
+	best_loss = np.min(r_curr_loss)
 
 class_mapping_inv = {v: k for k, v in class_mapping.items()}
 print('Starting training')
