@@ -221,7 +221,6 @@ for epoch_num in range(num_epochs):
 	progbar = generic_utils.Progbar(epoch_length)
 	## print('Epoch {}/{}'.format(epoch_num + 1, num_epochs))
 	print('Epoch {}/{}'.format(r_epochs + 1, total_epochs))
-    
     	r_epochs += 1
 
 	while True:
