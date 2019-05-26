@@ -6,6 +6,7 @@ import time
 import numpy as np
 from optparse import OptionParser
 import pickle
+import pandas as pd
 
 from keras import backend as K
 from keras.optimizers import Adam, SGD, RMSprop
@@ -35,6 +36,7 @@ parser.add_option("--config_filename", dest="config_filename", help=
 				default="config.pickle")
 parser.add_option("--output_weight_path", dest="output_weight_path", help="Output path for weights.", default='./model_frcnn.hdf5')
 parser.add_option("--input_weight_path", dest="input_weight_path", help="Input path for weights. If not specified, will try to load default weights provided by keras.")
+parser.add_option("--record_path", dest="record_path", help="Output path to record training.", default='./record.csv')
 
 (options, args) = parser.parse_args()
 
@@ -83,6 +85,8 @@ if 'bg' not in classes_count:
 	class_mapping['bg'] = len(class_mapping)
 
 C.class_mapping = class_mapping
+
+C.record_path = options.record_path
 
 inv_map = {v: k for k, v in class_mapping.items()}
 
@@ -133,6 +137,7 @@ model_classifier = Model([img_input, roi_input], classifier)
 # this is a model that holds both the RPN and the classifier, used to load/save weights for the models
 model_all = Model([img_input, roi_input], rpn[:2] + classifier)
 
+'''
 try:
 	print('loading weights from {}'.format(C.base_net_weights))
 	model_rpn.load_weights(C.base_net_weights, by_name=True)
@@ -140,6 +145,45 @@ try:
 except:
 	print('Could not load pretrained model weights. Weights can be found in the keras application folder \
 		https://github.com/fchollet/keras/tree/master/keras/applications')
+'''
+
+# Because the google colab can only run the session several hours one time (then you need to connect again), 
+# we need to save the model and load the model to continue training
+if not os.path.isfile(C.model_path): ##
+    #If this is the begin of the training, load the pre-traind base network such as vgg-16
+    try:
+        print('This is the first time of your training')
+        print('loading weights from {}'.format(C.base_net_weights))
+        model_rpn.load_weights(C.base_net_weights, by_name=True)
+        model_classifier.load_weights(C.base_net_weights, by_name=True)
+    except:
+        print('Could not load pretrained model weights. Weights can be found in the keras application folder \
+            https://github.com/fchollet/keras/tree/master/keras/applications')
+    
+    # Create the record.csv file to record losses, acc and mAP
+    record_df = pd.DataFrame(columns=['mean_overlapping_bboxes', 'class_acc', 'loss_rpn_cls', 'loss_rpn_regr', 'loss_class_cls', 'loss_class_regr', 'curr_loss', 'elapsed_time', 'mAP'])
+else:
+    # If this is a continued training, load the trained model from before
+    print('Continue training based on previous trained model')
+    print('Loading weights from {}'.format(C.model_path))
+    model_rpn.load_weights(C.model_path, by_name=True)
+    model_classifier.load_weights(C.model_path, by_name=True)
+    
+    # Load the records
+    record_df = pd.read_csv(C.record_path)
+
+    r_mean_overlapping_bboxes = record_df['mean_overlapping_bboxes']
+    r_class_acc = record_df['class_acc']
+    r_loss_rpn_cls = record_df['loss_rpn_cls']
+    r_loss_rpn_regr = record_df['loss_rpn_regr']
+    r_loss_class_cls = record_df['loss_class_cls']
+    r_loss_class_regr = record_df['loss_class_regr']
+    r_curr_loss = record_df['curr_loss']
+    r_elapsed_time = record_df['elapsed_time']
+    r_mAP = record_df['mAP']
+
+    print('Already train %dK batches'% (len(record_df)))
+
 
 optimizer = Adam(lr=1e-5)
 optimizer_classifier = Adam(lr=1e-5)
@@ -147,16 +191,25 @@ model_rpn.compile(optimizer=optimizer, loss=[losses.rpn_loss_cls(num_anchors), l
 model_classifier.compile(optimizer=optimizer_classifier, loss=[losses.class_loss_cls, losses.class_loss_regr(len(classes_count)-1)], metrics={'dense_class_{}'.format(len(classes_count)): 'accuracy'})
 model_all.compile(optimizer='sgd', loss='mae')
 
+total_epochs = len(record_df) ##
+r_epochs = len(record_df) ##
+
 epoch_length = 1000
 num_epochs = int(options.num_epochs)
 iter_num = 0
+
+total_epochs += num_epochs ##
 
 losses = np.zeros((epoch_length, 5))
 rpn_accuracy_rpn_monitor = []
 rpn_accuracy_for_epoch = []
 start_time = time.time()
 
-best_loss = np.Inf
+## best_loss = np.Inf
+if len(record_df)==0:
+    best_loss = np.Inf
+else:
+    best_loss = np.min(r_curr_loss)
 
 class_mapping_inv = {v: k for k, v in class_mapping.items()}
 print('Starting training')
@@ -166,7 +219,10 @@ vis = True
 for epoch_num in range(num_epochs):
 
 	progbar = generic_utils.Progbar(epoch_length)
-	print('Epoch {}/{}'.format(epoch_num + 1, num_epochs))
+	## print('Epoch {}/{}'.format(epoch_num + 1, num_epochs))
+	print('Epoch {}/{}'.format(r_epochs + 1, total_epochs))
+    
+    	r_epochs += 1
 
 	while True:
 		try:
@@ -260,7 +316,9 @@ for epoch_num in range(num_epochs):
 					print('Loss RPN regression: {}'.format(loss_rpn_regr))
 					print('Loss Detector classifier: {}'.format(loss_class_cls))
 					print('Loss Detector regression: {}'.format(loss_class_regr))
+					print('Total loss: {}'.format(loss_rpn_cls + loss_rpn_regr + loss_class_cls + loss_class_regr)) ##
 					print('Elapsed time: {}'.format(time.time() - start_time))
+		                        elapsed_time = (time.time()-start_time)/60 ##
 
 				curr_loss = loss_rpn_cls + loss_rpn_regr + loss_class_cls + loss_class_regr
 				iter_num = 0
@@ -272,6 +330,19 @@ for epoch_num in range(num_epochs):
 					best_loss = curr_loss
 					model_all.save_weights(C.model_path)
 
+				new_row = {'mean_overlapping_bboxes':round(mean_overlapping_bboxes, 3), 
+                           		   'class_acc':round(class_acc, 3), 
+                           	           'loss_rpn_cls':round(loss_rpn_cls, 3), 
+                           		   'loss_rpn_regr':round(loss_rpn_regr, 3), 
+                           		   'loss_class_cls':round(loss_class_cls, 3), 
+                           		   'loss_class_regr':round(loss_class_regr, 3), 
+                           		   'curr_loss':round(curr_loss, 3), 
+                           		   'elapsed_time':round(elapsed_time, 3), 
+                           		   'mAP': 0}
+
+                		record_df = record_df.append(new_row, ignore_index=True)
+                		record_df.to_csv(record_path, index=0)
+		
 				break
 
 		except Exception as e:
