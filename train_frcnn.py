@@ -342,7 +342,7 @@ for epoch_num in range(num_epochs):
                            		   'mAP': 0}
 
 				record_df = record_df.append(new_row, ignore_index=True)
-				record_df.to_csv(record_path, index=0)
+				record_df.to_csv(C.record_path, index=0)
 		
 				break
 
