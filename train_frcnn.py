@@ -318,7 +318,7 @@ for epoch_num in range(num_epochs):
 					print('Loss Detector regression: {}'.format(loss_class_regr))
 					print('Total loss: {}'.format(loss_rpn_cls + loss_rpn_regr + loss_class_cls + loss_class_regr)) ##
 					print('Elapsed time: {}'.format(time.time() - start_time))
-		                        elapsed_time = (time.time()-start_time)/60 ##
+					elapsed_time = (time.time()-start_time)/60 ##
 
 				curr_loss = loss_rpn_cls + loss_rpn_regr + loss_class_cls + loss_class_regr
 				iter_num = 0
@@ -331,7 +331,7 @@ for epoch_num in range(num_epochs):
 					model_all.save_weights(C.model_path)
 
 				new_row = {'mean_overlapping_bboxes':round(mean_overlapping_bboxes, 3), 
-                           		   'class_acc':round(class_acc, 3), 
+				           'class_acc':round(class_acc, 3), 
                            	           'loss_rpn_cls':round(loss_rpn_cls, 3), 
                            		   'loss_rpn_regr':round(loss_rpn_regr, 3), 
                            		   'loss_class_cls':round(loss_class_cls, 3), 
@@ -340,8 +340,8 @@ for epoch_num in range(num_epochs):
                            		   'elapsed_time':round(elapsed_time, 3), 
                            		   'mAP': 0}
 
-                		record_df = record_df.append(new_row, ignore_index=True)
-                		record_df.to_csv(record_path, index=0)
+				record_df = record_df.append(new_row, ignore_index=True)
+				record_df.to_csv(record_path, index=0)
 		
 				break
 
