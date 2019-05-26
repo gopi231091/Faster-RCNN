@@ -152,23 +152,23 @@ except:
 if not os.path.isfile(C.model_path): ##
     	#If this is the begin of the training, load the pre-traind base network such as vgg-16
 	try:
-        	print('This is the first time of your training')
-        	print('loading weights from {}'.format(C.base_net_weights))
-        	model_rpn.load_weights(C.base_net_weights, by_name=True)
-        	model_classifier.load_weights(C.base_net_weights, by_name=True)
-    	except:
-        	print('Could not load pretrained model weights. Weights can be found in the keras application folder \
-            		https://github.com/fchollet/keras/tree/master/keras/applications')
+		print('This is the first time of your training')
+		print('loading weights from {}'.format(C.base_net_weights))
+		model_rpn.load_weights(C.base_net_weights, by_name=True)
+		model_classifier.load_weights(C.base_net_weights, by_name=True)
+	except:
+		print('Could not load pretrained model weights. Weights can be found in the keras application folder \
+			https://github.com/fchollet/keras/tree/master/keras/applications')
     
-    	# Create the record.csv file to record losses, acc and mAP
-    	record_df = pd.DataFrame(columns=['mean_overlapping_bboxes', 'class_acc', 'loss_rpn_cls', 'loss_rpn_regr', 'loss_class_cls', 'loss_class_regr', 'curr_loss', 'elapsed_time', 'mAP'])
+	# Create the record.csv file to record losses, acc and mAP
+	record_df = pd.DataFrame(columns=['mean_overlapping_bboxes', 'class_acc', 'loss_rpn_cls', 'loss_rpn_regr', 'loss_class_cls', 'loss_class_regr', 'curr_loss', 'elapsed_time', 'mAP'])
 else:
-    	# If this is a continued training, load the trained model from before
-    	print('Continue training based on previous trained model')
-    	print('Loading weights from {}'.format(C.model_path))
-    	model_rpn.load_weights(C.model_path, by_name=True)
-    	model_classifier.load_weights(C.model_path, by_name=True)
-    
+	# If this is a continued training, load the trained model from before
+	print('Continue training based on previous trained model')
+	print('Loading weights from {}'.format(C.model_path))
+	model_rpn.load_weights(C.model_path, by_name=True)
+	model_classifier.load_weights(C.model_path, by_name=True)
+
 	# Load the records
 	record_df = pd.read_csv(C.record_path)
 
