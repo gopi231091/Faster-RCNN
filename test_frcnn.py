@@ -268,14 +268,14 @@ else:
 	accum_time = 0
 	curr_fps = 0
 	fps = "FPS: ??"
-	prev_time = timer()
+	prev_time = time.time()
 	while(vid.isOpened()):
 		return_value, frame = vid.read()
 		if return_value:
 			frame = cv2.transpose(frame)
 			frame = cv2.flip(frame, 1)
 			result = detect_image(image)
-			curr_time = timer()
+			curr_time = time.time()
 			exec_time = curr_time - prev_time
 			prev_time = curr_time
 			accum_time = accum_time + exec_time
