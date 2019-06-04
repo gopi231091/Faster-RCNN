@@ -27,6 +27,7 @@ parser.add_option("--config_filename", dest="config_filename", help=
 parser.add_option("--network", dest="network", help="Base network to use. Supports vgg or resnet50.", default='resnet50')
 parser.add_option("-i", "--image", dest="isImage", help="Is input image set path(then put true)", action="store_true", default=False)
 parser.add_option("--output", type="str", default="", help="output video path")
+parser.add_option("--isMap", help="Is testing to save detections to check MAP of PASCAL VOC Test 2007 (then put true)", action="store_true", default=False)
 
 (options, args) = parser.parse_args()
 
@@ -151,7 +152,7 @@ bbox_threshold = 0.8
 
 visualise = True
 
-def detect_image(img):
+def detect_image(img, image_id = "", is_map = False):
 	st = time.time()
 	X, ratio = format_img(img, C)
 
@@ -216,6 +217,9 @@ def detect_image(img):
 
 	all_dets = []
 
+	if is_map:
+		image_file = open('/content/VOC2007TestFRCNNRes50/%s.txt' % image_id, 'w')
+
 	for key in bboxes:
 		bbox = np.array(bboxes[key])
 
@@ -237,6 +241,11 @@ def detect_image(img):
 			cv2.rectangle(img, (textOrg[0] - 5,textOrg[1]+baseLine - 5), (textOrg[0]+retval[0] + 5, textOrg[1]-retval[1] - 5), (255, 255, 255), -1)
 			cv2.putText(img, textLabel, textOrg, cv2.FONT_HERSHEY_DUPLEX, 1, (0, 0, 0), 1)
 
+			if is_map:
+				image_file.write(key + " " + str(new_probs[jk]) + " " + str(real_x1) + " " + str(real_y1) + " " + str(real_x2) + " " + str(real_y2) + '\n')
+
+	if is_map:
+		image_file.close()
 	print('Elapsed time = {}'.format(time.time() - st))
 	print(all_dets)
 	#cv2.imshow('img', img)
@@ -244,7 +253,7 @@ def detect_image(img):
 	return img
 
 
-if options.isImage:
+if ((options.isImage) and (not options.isMap)):
 	for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 		if not img_name.lower().endswith(('.bmp', '.jpeg', '.jpg', '.png', '.tif', '.tiff')):
 			continue
@@ -343,7 +352,7 @@ if options.isImage:
 		cv2.imshow('img', img)
 		cv2.waitKey(0)
 		# cv2.imwrite('./results_imgs/{}.png'.format(idx),img)
-else:
+elif ((not options.isImage) and (not options.isMap)):
 	output_path = options.output
 	vid = cv2.VideoCapture(options.test_path)
 	if not vid.isOpened():
@@ -393,3 +402,20 @@ else:
 		if cv2.waitKey(1) & 0xFF == ord('q'):
 			break
 	out.release()
+else : # To save detections for MAP for VOC
+
+	sets = [('2007', 'test')]
+
+	for year, image_set in sets:
+		image_ids = open('/content/VOCdevkit/VOC%s/ImageSets/Main/%s.txt' % (year, image_set)).read().strip().split()
+		prev_time = timer()
+		for image_id in image_ids:
+			img_path = '/content/VOCdevkit/VOC%s/JPEGImages/%s.jpg' % (year, image_id)
+			imageCV = cv2.imread(img_path)
+			result = detect_image(imageCV, image_id, is_map=True)
+		total_time = timer() - prev_time
+		total_imgs = len(image_ids)
+		speed = total_imgs / total_time
+		print("Speed is {} fps".format(speed))
+
+
