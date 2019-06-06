@@ -31,7 +31,7 @@ parser.add_option("--isMap", help="Is testing to save detections to check MAP of
 
 (options, args) = parser.parse_args()
 
-if not options.test_path:   # if filename is not given
+if ((not options.test_path) and (not options.isMap)):   # if filename is not given
 	parser.error('Error: path to test data must be specified. Pass --path to command line')
 
 
@@ -408,12 +408,12 @@ else : # To save detections for MAP for VOC
 
 	for year, image_set in sets:
 		image_ids = open('/content/VOCdevkit/VOC%s/ImageSets/Main/%s.txt' % (year, image_set)).read().strip().split()
-		prev_time = timer()
+		prev_time = time.time()
 		for image_id in image_ids:
 			img_path = '/content/VOCdevkit/VOC%s/JPEGImages/%s.jpg' % (year, image_id)
 			imageCV = cv2.imread(img_path)
 			result = detect_image(imageCV, image_id, is_map=True)
-		total_time = timer() - prev_time
+		total_time = time.time() - prev_time
 		total_imgs = len(image_ids)
 		speed = total_imgs / total_time
 		print("Speed is {} fps".format(speed))
