@@ -67,6 +67,9 @@ if options.network == 'vgg':
 elif options.network == 'resnet50':
 	from keras_frcnn import resnet as nn
 	C.network = 'resnet50'
+elif options.network == 'mobilenetv1':
+	from keras_frcnn import mobilenetv1 as nn
+	C.network = 'mobilenetv1'
 else:
 	print('Not a valid model')
 	raise ValueError
