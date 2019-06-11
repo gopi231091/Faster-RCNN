@@ -218,7 +218,7 @@ def detect_image(img, image_id = "", is_map = False):
 	all_dets = []
 
 	if is_map:
-		image_file = open('/content/VOC2007TestFRCNNRes50/%s.txt' % image_id, 'w')
+		image_file = open('/content/VOC2007TestFRCNNVgg16/%s.txt' % image_id, 'w')
 
 	for key in bboxes:
 		bbox = np.array(bboxes[key])
