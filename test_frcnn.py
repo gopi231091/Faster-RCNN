@@ -349,9 +349,10 @@ if ((options.isImage) and (not options.isMap)):
 
 		print('Elapsed time = {}'.format(time.time() - st))
 		print(all_dets)
-		cv2.imshow('img', img)
-		cv2.waitKey(0)
-		# cv2.imwrite('./results_imgs/{}.png'.format(idx),img)
+		#cv2.imshow('img', img)
+		#cv2.waitKey(0)
+		#cv2.imwrite('./results_imgs/{}.png'.format(idx),img)
+		cv2.imwrite(str(idx) + '.jpg', img)
 elif ((not options.isImage) and (not options.isMap)):
 	output_path = options.output
 	vid = cv2.VideoCapture(options.test_path)
